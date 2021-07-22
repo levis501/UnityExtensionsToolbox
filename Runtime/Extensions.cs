@@ -189,5 +189,4 @@ public static class Extensions
     return ((a % b) + b) % b; // only positive modulus values
   }
   #endregion
-
 }
