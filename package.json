@@ -1,0 +1,12 @@
+{
+  "name": "com.conjugategames.unityextensionstoolbox",
+  "version": "0.0.1",
+  "displayName": "UnityExtensionsToolbox",
+  "description": "a useful set of c# extensions for Unity",
+  "author": {
+    "name" : "Conjugate Games",
+    "email": "conjugategames@gmail.com",
+    "url": "http://www.conjugategames.com"
+  }
+  "unity": "2020.3"
+}
