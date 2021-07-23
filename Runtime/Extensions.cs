@@ -7,11 +7,11 @@ public static class Extensions
 {
 
   #region VECTORS
-  public static Vector2 xy(this Vector3 v)
+  public static Vector2 XY(this Vector3 v)
   {
     return new Vector2(v.x, v.y);
   }
-  public static Vector2 xz(this Vector3 v)
+  public static Vector2 XZ(this Vector3 v)
   {
     return new Vector2(v.x, v.z);
   }
@@ -43,6 +43,12 @@ public static class Extensions
   public static Vector3 Map(this Vector3 v, Func<float, float> f)
   {
     return new Vector3(f(v.x), f(v.y), f(v.z));
+  }
+  
+  public static Vector3 WithY(this Vector3 v, float y)
+  {
+    v.y = y;
+    return v;
   }
   #endregion
 

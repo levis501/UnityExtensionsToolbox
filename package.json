@@ -4,9 +4,10 @@
   "displayName": "UnityExtensionsToolbox",
   "description": "a useful set of c# extensions for Unity",
   "author": {
-    "name" : "Conjugate Games",
+    "name": "Conjugate Games",
     "email": "conjugategames@gmail.com",
     "url": "http://www.conjugategames.com"
   },
-  "unity": "2020.3"
+  "unity": "2020.3",
+  "type": "library"
 }
