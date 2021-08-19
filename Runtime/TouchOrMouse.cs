@@ -1,8 +1,8 @@
 ﻿using System;
 using UnityEngine;
+
 public class TouchOrMouse
 {
-
   public static int touchCount
   {
     get
@@ -40,6 +40,7 @@ public class TouchOrMouse
     {
       _mouseTouch.phase = TouchPhase.Canceled;
     }
+    _mouseTouch.position = Input.mousePosition; 
     return mouseTouch;
   }
 }

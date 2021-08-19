@@ -63,6 +63,16 @@ public static class Extensions
     e.RemoveAll(x => x == null);
     return e;
   }
+  public static V Get<K,V>(this Dictionary<K, V> d, K key, V defaultValue)
+  {
+    if (d.ContainsKey(key))
+    {
+      return d[key];
+    } else
+    {
+      return defaultValue;
+    }
+  }
   #endregion
 
   #region COLOR AND TEXTURE
