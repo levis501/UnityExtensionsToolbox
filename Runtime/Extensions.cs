@@ -184,6 +184,15 @@ public static class Extensions
       UnityEngine.Object.DestroyImmediate(o);
     }
   }
+
+  public static void DestroyChildrenEA(this Transform transform)
+  {
+    foreach (var child in transform.GetAllChildren())
+    {
+      DestroyChildrenEA(child);
+      DestroyEA(child.gameObject);
+    }
+  }
   #endregion
 
   #region MONOBEHAVIOUR
