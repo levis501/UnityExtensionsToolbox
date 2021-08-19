@@ -44,7 +44,7 @@ public static class Extensions
   {
     return new Vector3(f(v.x), f(v.y), f(v.z));
   }
-  
+
   public static Vector3 WithY(this Vector3 v, float y)
   {
     v.y = y;
@@ -63,12 +63,13 @@ public static class Extensions
     e.RemoveAll(x => x == null);
     return e;
   }
-  public static V Get<K,V>(this Dictionary<K, V> d, K key, V defaultValue)
+  public static V Get<K, V>(this Dictionary<K, V> d, K key, V defaultValue)
   {
     if (d.ContainsKey(key))
     {
       return d[key];
-    } else
+    }
+    else
     {
       return defaultValue;
     }
@@ -132,11 +133,11 @@ public static class Extensions
   #endregion
 
   #region TRANSFORMS
-  public static List<Transform> GetAllChildren(this Transform root)
+  public static List<Transform> AllDescendants(this Transform root)
   {
     var children = Enumerable.Range(0, root.childCount).Select(i => root.GetChild(i));
 
-    var list = children.Aggregate(children.ToList(), (acc, x) => { acc.AddRange(x.GetAllChildren()); return acc; });
+    var list = children.Aggregate(children.ToList(), (acc, x) => { acc.Add(x); acc.AddRange(x.AllDescendants()); return acc; });
 
     return list;
   }
@@ -161,15 +162,21 @@ public static class Extensions
     return child;
   }
 
+  public static Transform CreateEmpty(this Transform parent, string childName)
+  {
+    Transform child = (new GameObject()).transform;
+    child.SetParent(parent, true);
+    child.name = childName;
+    return child;
+  }
+
   public static Transform FindOrCreate(this Transform parent, string childName)
   {
     Transform child = parent.Find(childName);
     if (child == null)
     {
-      child = (new GameObject()).transform;
-      child.SetParent(parent, true);
+      child = parent.CreateEmpty(childName);
     }
-    child.name = childName;
     return child;
   }
 
@@ -187,10 +194,13 @@ public static class Extensions
 
   public static void DestroyChildrenEA(this Transform transform)
   {
-    foreach (var child in transform.GetAllChildren())
+    var children = transform.AllDescendants();
+    foreach (var child in children)
     {
-      DestroyChildrenEA(child);
-      DestroyEA(child.gameObject);
+      if (child != null)
+      {
+        DestroyEA(child.gameObject);
+      }
     }
   }
   #endregion
