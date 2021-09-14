@@ -162,15 +162,20 @@ public static class Extensions
     return child;
   }
 
-  public static Transform CreateEmpty(this Transform parent, string childName)
+  public static Transform CreateEmpty(this Transform parent, string childName, Vector3? localPosition = null)
   {
     Transform child = (new GameObject()).transform;
     child.SetParent(parent, true);
     child.name = childName;
+    if (localPosition != null)
+    {
+      child.localPosition = (Vector3)localPosition;
+    }
     return child;
   }
 
-  public static Transform FindOrCreate(this Transform parent, string childName)
+
+public static Transform FindOrCreate(this Transform parent, string childName)
   {
     Transform child = parent.Find(childName);
     if (child == null)
@@ -211,7 +216,7 @@ public static class Extensions
     T c = o.GetComponent<T>();
     if (c == null)
     {
-      Debug.LogError($"GameObject {o.name} is missing a require component of type {typeof(T)}");
+      Debug.LogError($"GameObject {o.name} is missing a required component of type {typeof(T)}");
     }
     return c;
   }

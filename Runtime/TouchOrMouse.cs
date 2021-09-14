@@ -42,5 +42,5 @@ public class TouchOrMouse
     }
     _mouseTouch.position = Input.mousePosition; 
     return mouseTouch;
-  }
+  } 
 }
