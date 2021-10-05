@@ -5,7 +5,6 @@ using System.Linq;
 
 public static class Extensions
 {
-
   #region VECTORS
   public static Vector2 XY(this Vector3 v)
   {
@@ -44,12 +43,53 @@ public static class Extensions
   {
     return new Vector3(f(v.x), f(v.y), f(v.z));
   }
-  
+
   public static Vector3 WithY(this Vector3 v, float y)
   {
     v.y = y;
     return v;
   }
+  #endregion
+
+  #region INTERSECTIONS
+  public static Ray Reversed(this Ray ray)
+  {
+    return new Ray(ray.origin, -ray.direction);
+  }
+
+  public static Vector3 Intersection(this Plane plane, Ray ray)
+  {
+    float distance;
+    if (plane.Raycast(ray, out distance))
+    {
+      return ray.GetPoint(distance);
+    }
+    throw new ArithmeticException("Ray plane intersection failed");
+  }
+
+  public static Bounds BoundsOnPlane(this Camera cam, Plane plane)
+  {
+    var bounds = new Bounds();
+    try
+    {
+      foreach (var x in new[] { 0, cam.pixelWidth })
+      {
+        foreach (var y in new[] { 0, cam.pixelHeight })
+        {
+          var ray = cam.ScreenPointToRay(new Vector3(x, y, 0));
+          var point = plane.Intersection(ray);
+          bounds.Encapsulate(point);
+        }
+
+      }
+    }
+    catch (Exception e)
+    {
+      throw new ArithmeticException("Camera plane intersection failed", e);
+    }
+    return bounds;
+  }
+
   #endregion
 
   #region COLLECTIONS
@@ -63,12 +103,13 @@ public static class Extensions
     e.RemoveAll(x => x == null);
     return e;
   }
-  public static V Get<K,V>(this Dictionary<K, V> d, K key, V defaultValue)
+  public static V Get<K, V>(this Dictionary<K, V> d, K key, V defaultValue)
   {
     if (d.ContainsKey(key))
     {
       return d[key];
-    } else
+    }
+    else
     {
       return defaultValue;
     }
