@@ -173,11 +173,11 @@ public static class Extensions
   #endregion
 
   #region TRANSFORMS
-  public static List<Transform> GetAllChildren(this Transform root)
+  public static List<Transform> AllDescendants(this Transform root)
   {
     var children = Enumerable.Range(0, root.childCount).Select(i => root.GetChild(i));
 
-    var list = children.Aggregate(children.ToList(), (acc, x) => { acc.AddRange(x.GetAllChildren()); return acc; });
+    var list = children.Aggregate(children.ToList(), (acc, x) => { acc.Add(x); acc.AddRange(x.AllDescendants()); return acc; });
 
     return list;
   }
@@ -202,15 +202,26 @@ public static class Extensions
     return child;
   }
 
-  public static Transform FindOrCreate(this Transform parent, string childName)
+  public static Transform CreateEmpty(this Transform parent, string childName, Vector3? localPosition = null)
+  {
+    Transform child = (new GameObject()).transform;
+    child.SetParent(parent, true);
+    child.name = childName;
+    if (localPosition != null)
+    {
+      child.localPosition = (Vector3)localPosition;
+    }
+    return child;
+  }
+
+
+public static Transform FindOrCreate(this Transform parent, string childName)
   {
     Transform child = parent.Find(childName);
     if (child == null)
     {
-      child = (new GameObject()).transform;
-      child.SetParent(parent, true);
+      child = parent.CreateEmpty(childName);
     }
-    child.name = childName;
     return child;
   }
 
@@ -225,6 +236,18 @@ public static class Extensions
       UnityEngine.Object.DestroyImmediate(o);
     }
   }
+
+  public static void DestroyChildrenEA(this Transform transform)
+  {
+    var children = transform.AllDescendants();
+    foreach (var child in children)
+    {
+      if (child != null)
+      {
+        DestroyEA(child.gameObject);
+      }
+    }
+  }
   #endregion
 
   #region MONOBEHAVIOUR
@@ -233,7 +256,7 @@ public static class Extensions
     T c = o.GetComponent<T>();
     if (c == null)
     {
-      Debug.LogError($"GameObject {o.name} is missing a require component of type {typeof(T)}");
+      Debug.LogError($"GameObject {o.name} is missing a required component of type {typeof(T)}");
     }
     return c;
   }
