@@ -175,11 +175,15 @@ public static class Extensions
   #region TRANSFORMS
   public static List<Transform> AllDescendants(this Transform root)
   {
-    var children = Enumerable.Range(0, root.childCount).Select(i => root.GetChild(i));
-
+    var children = root.GetChildren();
     var list = children.Aggregate(children.ToList(), (acc, x) => { acc.Add(x); acc.AddRange(x.AllDescendants()); return acc; });
 
     return list;
+  }
+
+  public static IEnumerable<Transform> GetChildren(this Transform root)
+  {
+    return Enumerable.Range(0, root.childCount).Select(i => root.GetChild(i));
   }
 
   public static Transform OverwriteChild(this Transform parent, string childName, GameObject prefab = null)
@@ -215,7 +219,7 @@ public static class Extensions
   }
 
 
-public static Transform FindOrCreate(this Transform parent, string childName)
+  public static Transform FindOrCreate(this Transform parent, string childName)
   {
     Transform child = parent.Find(childName);
     if (child == null)
@@ -224,6 +228,20 @@ public static Transform FindOrCreate(this Transform parent, string childName)
     }
     return child;
   }
+
+  public static T FindComponentOrReplace<T>(this Transform parent, string childName, T prefab) where T : Component
+  {
+    Transform child = parent.Find(childName);
+    T component = child?.GetComponent<T>();
+    if (component == null)
+    {
+      if (child != null) { child.DestroyEA(); }
+      component = GameObject.Instantiate<T>(prefab, parent);
+      component.name = childName;
+    }
+    return component;
+  }
+
 
   public static void DestroyEA(this UnityEngine.Object o)
   {
