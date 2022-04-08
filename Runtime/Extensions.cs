@@ -345,7 +345,7 @@ public static class Extensions
   public static Vector3 TriangleCenter(this Mesh m, int t)
   {
     var v = m.TriangleVertices(t);
-    return 0.25f * (v[0] + v[1] + v[2] + v[3]);
+    return (v[0] + v[1] + v[2]) / 3;
   }
   #endregion
 }
