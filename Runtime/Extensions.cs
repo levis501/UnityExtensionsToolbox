@@ -347,5 +347,75 @@ public static class Extensions
     var v = m.TriangleVertices(t);
     return (v[0] + v[1] + v[2]) / 3;
   }
+  public static Dictionary<int, List<int>> VertexIndexToTriangleMapping(this Mesh m)
+  {
+    var vit = Enumerable.Range(0, m.vertexCount).ToDictionary(i => i, i => new List<int>());
+    foreach (var t in Enumerable.Range(0, m.TriangleCount()))
+    {
+      foreach (var v in m.TriangleVertexIndices(t))
+      {
+        vit[v].Add(t);
+      }
+    }
+    return vit;
+  }
+
+  public static HashSet<int> ConnectedVertices(this Mesh m, int vi, Dictionary<int, List<int>> vit)
+  {
+    var connectedVertices = new HashSet<int>();
+
+    var searchFrontier = new HashSet<int> { vi };
+    while (searchFrontier.Count > 0)
+    {
+      vi = searchFrontier.First();
+      searchFrontier.Remove(vi);
+      connectedVertices.Add(vi);
+      foreach (var t in vit[vi])
+      {
+        searchFrontier.UnionWith(
+          m.TriangleVertexIndices(t).Where(v => !connectedVertices.Contains(v)));
+      }
+    }
+    return connectedVertices;
+  }
+
+  public static HashSet<int> ConnectedTriangles(this Mesh m, int ti, Dictionary<int, List<int>> vit)
+  {
+    var connectedVertices = new HashSet<int>();
+    var connectedTriangles = new HashSet<int>();
+
+    var searchFrontier = m.TriangleVertexIndices(ti).ToHashSet();
+    while (searchFrontier.Count > 0)
+    {
+      var vi = searchFrontier.First();
+      searchFrontier.Remove(vi);
+      connectedVertices.Add(vi);
+      foreach (var t in vit[vi])
+      {
+        connectedTriangles.Add(t);
+        searchFrontier.UnionWith(
+          m.TriangleVertexIndices(t).Where(v => !connectedVertices.Contains(v)));
+      }
+    }
+    return connectedTriangles;
+  }
+
+  public static List<HashSet<int>> TriangleIslands(this Mesh m)
+  {
+    var islands = new List<HashSet<int>>();
+    var visitedTriangles = new HashSet<int>();
+
+    var vit = m.VertexIndexToTriangleMapping();
+    foreach (var ti in Enumerable.Range(0, m.TriangleCount()))
+    {
+      if (!visitedTriangles.Contains(ti))
+      {
+        var island = m.ConnectedTriangles(ti, vit);
+        visitedTriangles.UnionWith(island);
+        islands.Add(island);
+      }
+    }
+    return islands;
+  }
   #endregion
 }
