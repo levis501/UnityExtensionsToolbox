@@ -326,4 +326,26 @@ public static class Extensions
     return ((a % b) + b) % b; // only positive modulus values
   }
   #endregion
+
+  #region MESH
+  public static int TriangleCount(this Mesh m) { return m.triangles.Length / 3; }
+  public static int[] TriangleVertexIndices(this Mesh m, int t)
+  {
+    return new int[] { m.triangles[t * 3], m.triangles[t * 3 + 1], m.triangles[t * 3 + 2] };
+  }
+  public static Vector3[] TriangleVertices(this Mesh m, int t)
+  {
+    return m.TriangleVertexIndices(t).Select(vi => m.vertices[vi]).ToArray();
+  }
+  public static Vector3 TriangleNormal(this Mesh m, int t)
+  {
+    var v = m.TriangleVertices(t);
+    return Vector3.Cross(v[1] - v[0], v[2] - v[0]).normalized;
+  }
+  public static Vector3 TriangleCenter(this Mesh m, int t)
+  {
+    var v = m.TriangleVertices(t);
+    return 0.25f * (v[0] + v[1] + v[2] + v[3]);
+  }
+  #endregion
 }
