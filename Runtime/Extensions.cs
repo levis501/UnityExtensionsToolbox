@@ -49,6 +49,12 @@ public static class Extensions
     v.y = y;
     return v;
   }
+
+  // thanks to https://math.stackexchange.com/a/128999
+  public static float TriangleArea(Vector3 a, Vector3 b, Vector3 c)
+  {
+    return 0.5f * Vector3.Cross(b - a, c - a).magnitude;
+  }
   #endregion
 
   #region INTERSECTIONS
@@ -114,6 +120,39 @@ public static class Extensions
       return defaultValue;
     }
   }
+
+  public static Dictionary<G, HashSet<T> > MultiGroupBy<T, G> (this IEnumerable<T> x, Func<T, IEnumerable<G> > f)
+  {
+    var d = new Dictionary<G, HashSet<T> >();
+    foreach (var t in x)
+    {
+      foreach (var g in f(t))
+      {
+        if (d.ContainsKey(g)) {
+          d[g].Add(t);
+        } else
+        {
+          d[g] = new HashSet<T> { t };
+        }
+      }
+    }
+    return d;
+  }
+
+  public static Dictionary<K, HashSet<V> > ToDictionary<K, V>(this IEnumerable<IGrouping<K, V>> a)
+  {
+    return a.ToDictionary(g => g.Key, g => g.ToHashSet());
+  }
+
+  // Thanks to https://stackoverflow.com/a/64978120
+  public static IEnumerable<T> AsSingleton<T>(this T item) => new[] { item };
+  public static IEnumerable<IEnumerable<T>> CartesianProduct<T>(this IEnumerable<IEnumerable<T>> sequences) =>
+      sequences.Aggregate(
+          Enumerable.Empty<T>().AsSingleton(),
+          (accumulator, sequence) => accumulator.SelectMany(
+              accseq => sequence,
+              (accseq, item) => accseq.Append(item)));
+
   #endregion
 
   #region COLOR AND TEXTURE
