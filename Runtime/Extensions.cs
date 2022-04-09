@@ -24,6 +24,29 @@ public static class Extensions
     return new Vector3(v.x, v.y, z);
   }
 
+  public static bool LessThan(this Vector3Int a, Vector3Int b)
+  {
+    if (a.x < b.x) return true;
+    if (a.x > b.x) return false;
+    if (a.y < b.y) return true;
+    if (a.y > b.y) return false;
+    return a.z < b.z;
+  }
+
+  public static bool LessThan(this Vector3 a, Vector3 b)
+  {
+    if (a.x < b.x) return true;
+    if (a.x > b.x) return false;
+    if (a.y < b.y) return true;
+    if (a.y > b.y) return false;
+    return a.z < b.z;
+  }
+
+  public static Vector3Int ToVector3Int(this Vector3 a)
+  {
+    return new Vector3Int((int)a.x, (int)a.y, (int)a.z);
+  }
+
   public static float Max(this Vector2 v)
   {
     return Mathf.Max(v.x, v.y);
