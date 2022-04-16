@@ -370,18 +370,14 @@ public static class Extensions
     var v = m.TriangleVertices(t);
     return (v[0] + v[1] + v[2]) / 3;
   }
-  public static Dictionary<int, List<int>> VertexIndexToTriangleMapping(this Mesh m)
+
+  public static MultiMap<int, int> VertexIndexToTriangleMapping(this Mesh m)
   {
-    var vit = Enumerable.Range(0, m.vertexCount).ToDictionary(i => i, i => new List<int>());
-    foreach (var t in Enumerable.Range(0, m.TriangleCount()))
-    {
-      foreach (var v in m.TriangleVertexIndices(t))
-      {
-        vit[v].Add(t);
-      }
-    }
-    return vit;
-  }
+    var vt_pairs = Enumerable.Range(0, m.TriangleCount()).SelectMany(t => m.TriangleVertexIndices(t).Select(v => (v, t)));
+
+    return new MultiMap<int,int>(vt_pairs);
+}
+
 
   public static HashSet<int> ConnectedVertices(this Mesh m, int vi, Dictionary<int, List<int>> vit)
   {
@@ -402,7 +398,7 @@ public static class Extensions
     return connectedVertices;
   }
 
-  public static HashSet<int> ConnectedTriangles(this Mesh m, int ti, Dictionary<int, List<int>> vit)
+  public static HashSet<int> ConnectedTriangles(this Mesh m, int ti, MultiMap<int, int> vit)
   {
     var connectedVertices = new HashSet<int>();
     var connectedTriangles = new HashSet<int>();
