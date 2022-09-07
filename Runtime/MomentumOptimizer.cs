@@ -14,7 +14,8 @@ public class MomentumOptimizer {
   float currentCost;
   List<float> values;
   int n;
-
+  public float learning_rate = 0.03f;
+  public float momemtum_retention = 0.7f;
 
   public MomentumOptimizer(System.Func<List<float>, float> costFunction, List<float> initial_values)
   {
@@ -29,8 +30,8 @@ public class MomentumOptimizer {
   public List<float> IterateOptimization(int maximum_iteration_count)
   {
 
-    float a = 0.1f; // learning rate
-    float b = 0.9f; // moving average parameter
+    float a = learning_rate;
+    float b = momemtum_retention; 
 
     for (int iteration=0; iteration < maximum_iteration_count; iteration++)
     {
@@ -46,7 +47,7 @@ public class MomentumOptimizer {
 
   private float LocalPartialGradient(IEnumerable<float> v, int i, float c)
   {
-    float epsilon = 0.01f;
+    float epsilon = 0.001f;
     var vv = v.ToList();
     vv[i] += epsilon;
     var cc = costFunction(vv);
