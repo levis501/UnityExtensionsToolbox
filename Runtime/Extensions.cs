@@ -24,6 +24,29 @@ public static class Extensions
     return new Vector3(v.x, v.y, z);
   }
 
+  public static bool LessThan(this Vector3Int a, Vector3Int b)
+  {
+    if (a.x < b.x) return true;
+    if (a.x > b.x) return false;
+    if (a.y < b.y) return true;
+    if (a.y > b.y) return false;
+    return a.z < b.z;
+  }
+
+  public static bool LessThan(this Vector3 a, Vector3 b)
+  {
+    if (a.x < b.x) return true;
+    if (a.x > b.x) return false;
+    if (a.y < b.y) return true;
+    if (a.y > b.y) return false;
+    return a.z < b.z;
+  }
+
+  public static Vector3Int ToVector3Int(this Vector3 a)
+  {
+    return new Vector3Int((int)a.x, (int)a.y, (int)a.z);
+  }
+
   public static float Max(this Vector2 v)
   {
     return Mathf.Max(v.x, v.y);
@@ -48,6 +71,12 @@ public static class Extensions
   {
     v.y = y;
     return v;
+  }
+
+  // thanks to https://math.stackexchange.com/a/128999
+  public static float TriangleArea(Vector3 a, Vector3 b, Vector3 c)
+  {
+    return 0.5f * Vector3.Cross(b - a, c - a).magnitude;
   }
   #endregion
 
@@ -114,6 +143,39 @@ public static class Extensions
       return defaultValue;
     }
   }
+
+  public static Dictionary<G, HashSet<T> > MultiGroupBy<T, G> (this IEnumerable<T> x, Func<T, IEnumerable<G> > f)
+  {
+    var d = new Dictionary<G, HashSet<T> >();
+    foreach (var t in x)
+    {
+      foreach (var g in f(t))
+      {
+        if (d.ContainsKey(g)) {
+          d[g].Add(t);
+        } else
+        {
+          d[g] = new HashSet<T> { t };
+        }
+      }
+    }
+    return d;
+  }
+
+  public static Dictionary<K, HashSet<V> > ToDictionary<K, V>(this IEnumerable<IGrouping<K, V>> a)
+  {
+    return a.ToDictionary(g => g.Key, g => g.ToHashSet());
+  }
+
+  // Thanks to https://stackoverflow.com/a/64978120
+  public static IEnumerable<T> AsSingleton<T>(this T item) => new[] { item };
+  public static IEnumerable<IEnumerable<T>> CartesianProduct<T>(this IEnumerable<IEnumerable<T>> sequences) =>
+      sequences.Aggregate(
+          Enumerable.Empty<T>().AsSingleton(),
+          (accumulator, sequence) => accumulator.SelectMany(
+              accseq => sequence,
+              (accseq, item) => accseq.Append(item)));
+
   #endregion
 
   #region COLOR AND TEXTURE
@@ -285,6 +347,94 @@ public static class Extensions
   public static float mod(float a, float b)
   {
     return ((a % b) + b) % b; // only positive modulus values
+  }
+  #endregion
+
+  #region MESH
+  public static int TriangleCount(this Mesh m) { return m.triangles.Length / 3; }
+  public static int[] TriangleVertexIndices(this Mesh m, int t)
+  {
+    return new int[] { m.triangles[t * 3], m.triangles[t * 3 + 1], m.triangles[t * 3 + 2] };
+  }
+  public static Vector3[] TriangleVertices(this Mesh m, int t)
+  {
+    return m.TriangleVertexIndices(t).Select(vi => m.vertices[vi]).ToArray();
+  }
+  public static Vector3 TriangleNormal(this Mesh m, int t)
+  {
+    var v = m.TriangleVertices(t);
+    return Vector3.Cross(v[1] - v[0], v[2] - v[0]).normalized;
+  }
+  public static Vector3 TriangleCenter(this Mesh m, int t)
+  {
+    var v = m.TriangleVertices(t);
+    return (v[0] + v[1] + v[2]) / 3;
+  }
+
+  public static MultiMap<int, int> VertexIndexToTriangleMapping(this Mesh m)
+  {
+    var vt_pairs = Enumerable.Range(0, m.TriangleCount()).SelectMany(t => m.TriangleVertexIndices(t).Select(v => (v, t)));
+
+    return new MultiMap<int,int>(vt_pairs);
+}
+
+
+  public static HashSet<int> ConnectedVertices(this Mesh m, int vi, Dictionary<int, List<int>> vit)
+  {
+    var connectedVertices = new HashSet<int>();
+
+    var searchFrontier = new HashSet<int> { vi };
+    while (searchFrontier.Count > 0)
+    {
+      vi = searchFrontier.First();
+      searchFrontier.Remove(vi);
+      connectedVertices.Add(vi);
+      foreach (var t in vit[vi])
+      {
+        searchFrontier.UnionWith(
+          m.TriangleVertexIndices(t).Where(v => !connectedVertices.Contains(v)));
+      }
+    }
+    return connectedVertices;
+  }
+
+  public static HashSet<int> ConnectedTriangles(this Mesh m, int ti, MultiMap<int, int> vit)
+  {
+    var connectedVertices = new HashSet<int>();
+    var connectedTriangles = new HashSet<int>();
+
+    var searchFrontier = m.TriangleVertexIndices(ti).ToHashSet();
+    while (searchFrontier.Count > 0)
+    {
+      var vi = searchFrontier.First();
+      searchFrontier.Remove(vi);
+      connectedVertices.Add(vi);
+      foreach (var t in vit[vi])
+      {
+        connectedTriangles.Add(t);
+        searchFrontier.UnionWith(
+          m.TriangleVertexIndices(t).Where(v => !connectedVertices.Contains(v)));
+      }
+    }
+    return connectedTriangles;
+  }
+
+  public static List<HashSet<int>> TriangleIslands(this Mesh m)
+  {
+    var islands = new List<HashSet<int>>();
+    var visitedTriangles = new HashSet<int>();
+
+    var vit = m.VertexIndexToTriangleMapping();
+    foreach (var ti in Enumerable.Range(0, m.TriangleCount()))
+    {
+      if (!visitedTriangles.Contains(ti))
+      {
+        var island = m.ConnectedTriangles(ti, vit);
+        visitedTriangles.UnionWith(island);
+        islands.Add(island);
+      }
+    }
+    return islands;
   }
   #endregion
 }
