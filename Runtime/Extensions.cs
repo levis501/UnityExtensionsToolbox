@@ -176,6 +176,12 @@ public static class Extensions
               accseq => sequence,
               (accseq, item) => accseq.Append(item)));
 
+  public static (T, T) Sorted<T>(this (T, T) a) where T : IComparable<T>
+  {
+    if (a.Item2.CompareTo(a.Item1) > 0) return a;
+    return (a.Item2, a.Item1);
+  }
+
   #endregion
 
   #region COLOR AND TEXTURE
