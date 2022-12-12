@@ -248,6 +248,16 @@ public static class Extensions
     return Enumerable.Range(0, root.childCount).Select(i => root.GetChild(i));
   }
 
+  public static IEnumerable<GameObject> GetChildGameObjects(this Transform root)
+  {
+    return root.GetChildren().Select(t => t.gameObject);
+  }
+
+  public static void SetChildrenActive(this Transform root, bool active)
+  {
+    root.GetChildGameObjects().ToList().ForEach(o => o.SetActive(active));
+  }
+
   public static Transform OverwriteChild(this Transform parent, string childName, GameObject prefab = null)
   {
     Transform child = parent.Find(childName);
