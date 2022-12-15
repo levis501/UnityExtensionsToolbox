@@ -1,15 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class MultiMap<TKey, TValue> :
-  //System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<TKey, TValue>>,
-  //System.Collections.Generic.IDictionary<TKey, TValue>
-  System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TValue>>
-  //System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<TKey, TValue>>,
-  //System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>,
-  //System.Collections.IDictionary,
-  //System.Runtime.Serialization.IDeserializationCallback,
-  //System.Runtime.Serialization.ISerializable*/
+public class MultiMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
 {
 
