@@ -1,25 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
-public class MultiMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
+public class MultiMap<TKey, TValue> : Dictionary<TKey, List<TValue>>
 
 {
-
-
-  Dictionary<TKey, List<TValue>> d;
-
-  public Dictionary<TKey, List<TValue>>.KeyCollection Keys
-  {
-    get
-    {
-      return d.Keys;
-    }
-  }
-
-  public MultiMap()
-  {
-    d = new Dictionary<TKey, List<TValue>>();
-  }
 
   public void RemoveAll(IEnumerable<(TKey k, TValue v)> kv_pairs)
   {
@@ -30,19 +16,18 @@ public class MultiMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
   private void Remove(TKey k, TValue v)
   {
-    if (d.ContainsKey(k))
+    if (this.ContainsKey(k))
     {
-      d[k].Remove(v);
-      if (d[k].Count == 0)
+      this[k].Remove(v);
+      if (this[k].Count == 0)
       {
-        d.Remove(k);
+        this.Remove(k);
       }
     }
   }
 
   public MultiMap(IEnumerable<(TKey k, TValue v)> kv_pairs)
   {
-    d = new Dictionary<TKey, List<TValue>>();
     foreach (var kvp in kv_pairs)
     {
       this.Add(kvp);
@@ -51,13 +36,13 @@ public class MultiMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
   public void Add(TKey k, TValue v)
   {
-    if (d.ContainsKey(k))
+    if (this.ContainsKey(k))
     {
-      d[k].Add(v);
+      this[k].Add(v);
     }
     else
     {
-      d[k] = new List<TValue> { v };
+      this.Add(k, new List<TValue> { v });
     }
   }
 
@@ -66,25 +51,9 @@ public class MultiMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
     this.Add(a.k, a.v);
   }
 
-  public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+  public Dictionary<TKey, TValue> ToDictionary(Func<IEnumerable<TValue>, TValue> f)
   {
-    foreach (var k in d.Keys)
-    {
-      foreach (var v in d[k])
-      {
-        yield return new KeyValuePair<TKey, TValue>(k, v);
-      }
-    }
-  }
-
-  IEnumerator IEnumerable.GetEnumerator()
-  {
-    return (IEnumerator)GetEnumerator();
-  }
-
-  public List<TValue> this[TKey key]
-  {
-    get => this.d[key];
+    return this.Keys.ToDictionary(k => k, k => f(this[k]));
   }
 
 }

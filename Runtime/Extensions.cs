@@ -144,16 +144,18 @@ public static class Extensions
     }
   }
 
-  public static Dictionary<G, HashSet<T> > MultiGroupBy<T, G> (this IEnumerable<T> x, Func<T, IEnumerable<G> > f)
+  public static Dictionary<G, HashSet<T>> MultiGroupBy<T, G>(this IEnumerable<T> x, Func<T, IEnumerable<G>> f)
   {
-    var d = new Dictionary<G, HashSet<T> >();
+    var d = new Dictionary<G, HashSet<T>>();
     foreach (var t in x)
     {
       foreach (var g in f(t))
       {
-        if (d.ContainsKey(g)) {
+        if (d.ContainsKey(g))
+        {
           d[g].Add(t);
-        } else
+        }
+        else
         {
           d[g] = new HashSet<T> { t };
         }
@@ -162,7 +164,7 @@ public static class Extensions
     return d;
   }
 
-  public static Dictionary<K, HashSet<V> > ToDictionary<K, V>(this IEnumerable<IGrouping<K, V>> a)
+  public static Dictionary<K, HashSet<V>> ToDictionary<K, V>(this IEnumerable<IGrouping<K, V>> a)
   {
     return a.ToDictionary(g => g.Key, g => g.ToHashSet());
   }
@@ -182,6 +184,58 @@ public static class Extensions
     return (a.Item2, a.Item1);
   }
 
+  public static IEnumerable<T> WhereIndex<T>(this IEnumerable<T> items, Func<int, bool> f)
+  {
+    return items.Where((x, i) => f(i));
+  }
+
+
+  public static IEnumerable<IEnumerable<T>> GroupsOf<T>(this IEnumerable<T> items, int n)
+  {
+    //  var aggregate = new List<IEnumerable<T>> { items.Take(n) };
+    //  var source = items.Skip(n);
+    //  while (source.Any())
+    //  {
+    //    aggregate.Append(source.Take(n));
+    //    source = source.Skip(n);
+    //  }
+    //}
+
+    IEnumerable<IEnumerable<T>> initialAggregate = new List<IEnumerable<T>> { items.Take(n) };
+    var remainder = items.Skip(n);
+
+    Func<IEnumerable<IEnumerable<T>>, T, IEnumerable<IEnumerable<T>>> f = (aggregate, item) =>
+    {
+      if (aggregate.Last().Count() < n)
+      {
+        var updatedLast = aggregate.Last().Append(item);
+        return aggregate.Take(aggregate.Count() - 1).Append(updatedLast);
+      }
+      else
+      {
+        return aggregate.Append(new List<T> { item });
+      }
+    };
+
+    return remainder.Aggregate(initialAggregate, f);
+
+  }
+
+  public static IEnumerable<(T, T)> PairAdjacentCyclic<T>(this IEnumerable<T> items)
+  {
+    var shifted = items.Skip(1).Append(items.First());
+    return items.Zip(shifted, (a, b) => (a, b));
+  }
+
+  public static List<T> Ungroup<T>(this IEnumerable<IEnumerable<T>> groups)
+  {
+    return groups.SelectMany(x => x).ToList();
+  }
+
+  public static MultiMap<TKey, TValue> ToMultiMap<TKey, TValue>(this IEnumerable<(TKey, TValue)> kvpairs)
+  {
+    return new MultiMap<TKey, TValue>(kvpairs);
+  }
   #endregion
 
   #region COLOR AND TEXTURE
@@ -364,6 +418,11 @@ public static class Extensions
   {
     return ((a % b) + b) % b; // only positive modulus values
   }
+
+  public static int mod(int a, int b)
+  {
+    return ((a % b) + b) % b; 
+  }
   #endregion
 
   #region MESH
@@ -391,9 +450,8 @@ public static class Extensions
   {
     var vt_pairs = Enumerable.Range(0, m.TriangleCount()).SelectMany(t => m.TriangleVertexIndices(t).Select(v => (v, t)));
 
-    return new MultiMap<int,int>(vt_pairs);
-}
-
+    return new MultiMap<int, int>(vt_pairs);
+  }
 
   public static HashSet<int> ConnectedVertices(this Mesh m, int vi, Dictionary<int, List<int>> vit)
   {
