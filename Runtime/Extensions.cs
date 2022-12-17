@@ -327,39 +327,26 @@ public static class Extensions
 
   public static IEnumerable<IEnumerable<T>> GroupsOf<T>(this IEnumerable<T> items, int n)
   {
-    //  var aggregate = new List<IEnumerable<T>> { items.Take(n) };
-    //  var source = items.Skip(n);
-    //  while (source.Any())
-    //  {
-    //    aggregate.Append(source.Take(n));
-    //    source = source.Skip(n);
-    //  }
-    //}
-
-    IEnumerable<IEnumerable<T>> initialAggregate = new List<IEnumerable<T>> { items.Take(n) };
-    var remainder = items.Skip(n);
-
-    Func<IEnumerable<IEnumerable<T>>, T, IEnumerable<IEnumerable<T>>> f = (aggregate, item) =>
+    IEnumerable<IEnumerable<T>> aggregate = new List<IEnumerable<T>> { items.Take(n) };
+    var source = items.Skip(n);
+    while (source.Any())
     {
-      if (aggregate.Last().Count() < n)
-      {
-        var updatedLast = aggregate.Last().Append(item);
-        return aggregate.Take(aggregate.Count() - 1).Append(updatedLast);
-      }
-      else
-      {
-        return aggregate.Append(new List<T> { item });
-      }
-    };
+      aggregate = aggregate.Append(source.Take(n));
+      source = source.Skip(n);
+    }
+    return aggregate;
+  }
 
-    return remainder.Aggregate(initialAggregate, f);
-
+  public static IEnumerable<T> RotateFirst<T>(this IEnumerable<T> items, int n=1)
+  {
+    var head = items.Take(n);
+    var tail = items.Skip(n);
+    return head.Concat(tail);
   }
 
   public static IEnumerable<(T, T)> PairAdjacentCyclic<T>(this IEnumerable<T> items)
   {
-    var shifted = items.Skip(1).Append(items.First());
-    return items.Zip(shifted, (a, b) => (a, b));
+    return items.Zip(items.RotateFirst(), (a, b) => (a, b));
   }
 
   public static List<T> Ungroup<T>(this IEnumerable<IEnumerable<T>> groups)
