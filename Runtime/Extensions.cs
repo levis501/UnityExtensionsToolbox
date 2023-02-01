@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using log4net.Util;
+using Transform = UnityEngine.Transform;
 
 public static class Extensions
 {
@@ -67,17 +69,150 @@ public static class Extensions
     return new Vector3(f(v.x), f(v.y), f(v.z));
   }
 
+  public static Vector3 WithX(this Vector3 v, float x)
+  {
+    v.x = x;
+    return v;
+  }
+
   public static Vector3 WithY(this Vector3 v, float y)
   {
     v.y = y;
     return v;
   }
 
+  public static Vector3 WithZ(this Vector3 v, float z)
+  {
+    v.z = z;
+    return v;
+  }
+
+  public static Vector3 WithMagnitude(this Vector3 v, float magnitude)
+  {
+    return v.normalized * magnitude;
+  }
+
+  public static Vector2 WithMagnitude(this Vector2 v, float magnitude)
+  {
+    return v.normalized * magnitude;
+  }
+
+  public static Vector2 WithClampedMagnitude(this Vector2 v, float min, float max)
+  {
+    float mag = v.magnitude;
+    if (mag < min) return v.WithMagnitude(min);
+    if (mag > max) return v.WithMagnitude(max);
+    return v;
+  }
+
+  public static Vector3 WithClampedMagnitude(this Vector3 v, float min, float max)
+  {
+    float mag = v.magnitude;
+    if (mag < min) return v.WithMagnitude(min);
+    if (mag > max) return v.WithMagnitude(max);
+    return v;
+  }
+
+
   // thanks to https://math.stackexchange.com/a/128999
   public static float TriangleArea(Vector3 a, Vector3 b, Vector3 c)
   {
     return 0.5f * Vector3.Cross(b - a, c - a).magnitude;
   }
+
+
+  // Storing Spherical Coordinates in a Vector3
+  public static float Radius(this Vector3 v)
+  {
+    return v.x;
+  }
+  public static Vector3 WithRadius(this Vector3 v, float r)
+  {
+    return v.WithX(r);
+  }
+
+  public static float Longitude(this Vector3 v)
+  {
+    return v.y;
+  }
+  public static Vector3 WithLongitude(this Vector3 v, float longitude)
+  {
+    return v.WithY(longitude);
+  }
+  public static float Latitude(this Vector3 v)
+  {
+    return v.z;
+  }
+  public static Vector3 WithLatitude(this Vector3 v, float latitude)
+  {
+    return v.WithZ(latitude);
+  }
+
+  public static Vector3 WithLongLat(this Vector3 v, float longitude, float latitude)
+  {
+    return v.WithLongitude(longitude).WithLatitude(latitude);
+  }
+
+  
+
+
+  // thanks to https://stackoverflow.com/questions/10868135/cartesian-to-polar-3d-coordinates
+
+  // r = sqrt(x * x + y * y + z * z)
+  // long = acos(x / sqrt(x * x + y * y)) * (y < 0 ? -1 : 1)
+  // lat = acos(z / r)
+
+  public static Vector3 ToRLongLatZUp(this Vector3 v)
+  {
+    var radius = v.magnitude;
+    var longitude = Mathf.Acos(v.x / v.XY().magnitude) * (v.y < 0 ? -1 : 1);
+    var latitude = Mathf.Acos(v.z / radius);
+    return new Vector3(radius, longitude, latitude);
+  }
+
+  // For Unity coordinates, with Y Up
+  public static Vector3 ToRLongLat(this Vector3 v)
+  {
+    var radius = v.magnitude;
+    var longitude = Mathf.Acos(v.x / v.XZ().magnitude) * (v.z < 0 ? -1 : 1);
+    var latitude = Mathf.Acos(v.y / radius);
+    return new Vector3(radius, longitude, latitude);
+  }
+
+  //  x = r * sin(lat) * cos(long)
+  //  y = r * sin(lat) * sin(long)
+  //  z = r * cos(lat)
+
+  public static Vector3 FromRLongLatZUp(this Vector3 v)
+  {
+    var radius = v.x;
+    var longitude = v.y;
+    var latitude = v.z;
+
+    var x = radius * Mathf.Sin(latitude) * Mathf.Cos(longitude);
+    var y = radius * Mathf.Sin(latitude) * Mathf.Sin(longitude);
+    var z = radius * Mathf.Cos(latitude);
+
+    return new Vector3(x, y, z);
+  }
+
+  // For Unity coordinates, with Y Up
+  public static Vector3 FromRLongLat(this Vector3 v)
+  {
+    var radius = v.x;
+    var longitude = v.y;
+    var latitude = v.z;
+
+    var x = radius * Mathf.Sin(latitude) * Mathf.Cos(longitude);
+    var y = radius * Mathf.Cos(latitude);
+    var z = radius * Mathf.Sin(latitude) * Mathf.Sin(longitude);
+
+    return new Vector3(x, y, z);
+  }
+
+
+
+
   #endregion
 
   #region INTERSECTIONS
@@ -236,6 +371,12 @@ public static class Extensions
   {
     return new MultiMap<TKey, TValue>(kvpairs);
   }
+
+  public static IEnumerable<(T element, int index)> Enumerated<T>(this IEnumerable<T> x)
+  {
+    return x.Select((x, i) => (x, i));
+  }
+
   #endregion
 
   #region COLOR AND TEXTURE
