@@ -319,6 +319,12 @@ public static class Extensions
     return (a.Item2, a.Item1);
   }
 
+  public static (T, T) Reversed<T>(this (T, T) a) where T : IComparable<T>
+  {
+    return (a.Item2, a.Item1);
+  }
+
+
   public static IEnumerable<T> WhereIndex<T>(this IEnumerable<T> items, Func<int, bool> f)
   {
     return items.Where((x, i) => f(i));
@@ -339,8 +345,8 @@ public static class Extensions
 
   public static IEnumerable<T> RotateFirst<T>(this IEnumerable<T> items, int n=1)
   {
-    var head = items.Take(n);
-    var tail = items.Skip(n);
+    var tail = items.Take(n);
+    var head = items.Skip(n);
     return head.Concat(tail);
   }
 
@@ -362,6 +368,12 @@ public static class Extensions
   public static IEnumerable<(T element, int index)> Enumerated<T>(this IEnumerable<T> x)
   {
     return x.Select((x, i) => (x, i));
+  }
+
+  public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<(TKey, TValue)> kvpairs)
+  {
+    var mm = kvpairs.ToMultiMap();
+    return mm.ToDictionary(x => x.First());
   }
 
   #endregion
