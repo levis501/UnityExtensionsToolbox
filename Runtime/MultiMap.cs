@@ -34,6 +34,14 @@ public class MultiMap<TKey, TValue> : Dictionary<TKey, List<TValue>>
     }
   }
 
+  public MultiMap(Dictionary<TKey, List<TValue>> dict)
+  {
+    foreach (var kvp in dict)
+    {
+      this[kvp.Key] = kvp.Value.ToList();
+    }
+  }
+
   public void Add(TKey k, TValue v)
   {
     if (this.ContainsKey(k))

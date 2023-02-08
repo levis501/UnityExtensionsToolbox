@@ -153,8 +153,15 @@ public static class Extensions
     return v.WithLongitude(longitude).WithLatitude(latitude);
   }
 
-  
-
+  public static Vector3 ToVector3(this float[] f)
+  {
+    var n = f.Length;
+    return new Vector3(
+      n > 0 ? f[0] : 0,
+      n > 1 ? f[1] : 0,
+      n > 2 ? f[2] : 0
+      );
+  }
 
   // thanks to https://stackoverflow.com/questions/10868135/cartesian-to-polar-3d-coordinates
 
@@ -210,7 +217,16 @@ public static class Extensions
     return new Vector3(x, y, z);
   }
 
+  public static Vector3 Sum(this IEnumerable<Vector3> vs)
+  {
+    Func<Vector3, Vector3,  Vector3> add = (x, y) => (x + y);
+    return vs.Aggregate(add);
+  }
 
+  public static Vector3 Mean(this IEnumerable<Vector3> vs)
+  {
+    return vs.Sum() / vs.Count();
+  }
 
 
   #endregion
@@ -313,6 +329,28 @@ public static class Extensions
               accseq => sequence,
               (accseq, item) => accseq.Append(item)));
 
+  public static IEnumerable<(Tx, Ty)> PairWith<Tx, Ty>(this IEnumerable<Tx> xs, Ty y)
+  {
+    return xs.Select(x => (x, y));
+  }
+
+  public static (Ty, Tx) FlipTuple<Tx, Ty>((Tx, Ty) xy) => (xy.Item2, xy.Item1);
+  public static (Tx, Ty, Tz) FlattenTuple<Tx, Ty, Tz>(((Tx, Ty), Tz) xyz) => (xyz.Item1.Item1, xyz.Item1.Item2, xyz.Item2);
+
+
+  public static IEnumerable<(Tx, Ty)> Product<Tx, Ty>(this IEnumerable<Tx> xs, IEnumerable<Ty> ys)
+  {
+    var yx = xs.PairWith(ys).Select(FlipTuple).Select(ysx => ysx.Item1.PairWith(ysx.Item2)).SelectMany(a => a);
+    return yx.Select(FlipTuple);
+  }
+
+  public static IEnumerable<(Tx, Ty, Tz)> Product<Tx, Ty, Tz>(this IEnumerable<Tx> xs, IEnumerable<Ty> ys, IEnumerable<Tz> zs)
+  {
+    var a = xs.Product(ys).Product(zs);
+    return a.Select(FlattenTuple);
+  }
+
+
   public static (T, T) Sorted<T>(this (T, T) a) where T : IComparable<T>
   {
     if (a.Item2.CompareTo(a.Item1) > 0) return a;
@@ -355,6 +393,21 @@ public static class Extensions
     return items.Zip(items.RotateFirst(), (a, b) => (a, b));
   }
 
+  public static IEnumerable<(Tx, Ty)> Zip2<Tx, Ty>(this IEnumerable<Tx> xs, IEnumerable<Ty> ys)
+  {
+    return xs.Zip(ys, (x, y) => (x, y));
+  }
+
+  public static IEnumerable<(Tx, Ty, Tz)> Zip3<Tx, Ty, Tz>(this IEnumerable<Tx> xs, IEnumerable<Ty> ys, IEnumerable<Tz> zs)
+  {
+    return xs.Zip2(ys).Zip(zs, (xy, z) => (xy.Item1, xy.Item2, z));
+  }
+
+  public static IEnumerable<TResult> ZipWith3<Tx, Ty, Tz, TResult>(this IEnumerable<Tx> xs, IEnumerable<Ty> ys, IEnumerable<Tz> zs, Func<Tx, Ty, Tz, TResult> f)
+  {
+    return xs.Zip3(ys, zs).Select<(Tx, Ty, Tz), TResult>(f.TupleArgs());
+  }
+
   public static List<T> Ungroup<T>(this IEnumerable<IEnumerable<T>> groups)
   {
     return groups.SelectMany(x => x).ToList();
@@ -375,6 +428,36 @@ public static class Extensions
     var mm = kvpairs.ToMultiMap();
     return mm.ToDictionary(x => x.First());
   }
+
+  public static MultiMap<TKey, TValue> ToMultiMap<TKey, TValue>(this Dictionary<TKey, List<TValue>> dict)
+  {
+    return new MultiMap<TKey, TValue>(dict);
+  }
+  
+  #endregion
+
+  #region FUNCTIONS
+  public static Func<(Tx, Ty, Tz), TResult> TupleArgs<Tx, Ty, Tz, TResult>(this Func<Tx, Ty, Tz, TResult> f)
+  {
+    return (xyz) => f(xyz.Item1, xyz.Item2, xyz.Item3);
+  }
+
+  public static Func<(Tx, Ty), TResult> TupleArgs<Tx, Ty, TResult>(this Func<Tx, Ty, TResult> f)
+  {
+    return (xy) => f(xy.Item1, xy.Item2);
+  }
+
+  public static Func<Tx, Ty, Tz, TResult> UntupleArgs<Tx, Ty, Tz, TResult>(this Func<(Tx, Ty, Tz), TResult> f)
+  {
+    return (x, y, z) => f((x, y, z));
+  }
+
+  public static Func<Tx, Ty, TResult> UntupleArgs<Tx, Ty, TResult>(this Func<(Tx, Ty), TResult> f)
+  {
+      return (x, y) => f((x, y));
+  }
+
+  public static Func<Ta, Tc> After<Ta, Tb, Tc>(this Func<Tb, Tc> fbc, Func<Ta, Tb> fab) => (a => fbc(fab(a)));
 
   #endregion
 
@@ -654,5 +737,48 @@ public static class Extensions
     }
     return islands;
   }
+
+  public static float SignedTriangleVolume(this Mesh m, IEnumerable<int> vis)
+  {
+    if ((vis == null) || (vis.Count() != 3)) return 0;
+    var vs = vis.Select(vi => m.vertices[vi]).ToList();
+    return (Vector3.Dot(Vector3.Cross(vs[0], vs[1]), vs[2]));
+  }
+
+  public static float SignedVolume(this Mesh m)
+  {
+    return m.triangles.GroupsOf(3).Select(vis => m.SignedTriangleVolume(vis)).Sum();
+  }
+  public static float Volume(this Mesh m)
+  {
+    return Mathf.Abs(m.SignedVolume());
+  }
+
+  // returns a vertex index lookup to a list of mergable vertex indices
+  public static MultiMap<int, int> MergeMap(this Mesh m, float mergeDistance)
+  {
+    Func<float, int> eqC = c => Mathf.FloorToInt(c / mergeDistance);
+    Func<Vector3, Vector3Int> eqV =
+      v => (new Vector3Int(eqC(v.x), eqC(v.y), eqC(v.z)));
+
+    var eqVerts = m.vertices.Select((v, i) => (eqV(v), i)).ToMultiMap();
+
+    var result = m.vertices.Select((v, i) => (i, eqVerts[eqV(v)])).ToDictionary();
+    return new MultiMap<int, int>(result);
+  }
+
+  public static List<List<int>> MergeSets(this Mesh m, float eqDistance)
+  {
+    Func<float, int> eqC = c => Mathf.FloorToInt(c / eqDistance);
+    Func<Vector3, Vector3Int> eqV =
+      v => (new Vector3Int(eqC(v.x), eqC(v.y), eqC(v.z)));
+
+    var eqVerts = m.vertices.Select((v, i) => (eqV(v), i)).ToMultiMap();
+
+    var mergeSets = eqVerts.Values.ToList();
+
+    return mergeSets;
+  }
+
   #endregion
 }
