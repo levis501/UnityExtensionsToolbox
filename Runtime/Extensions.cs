@@ -337,11 +337,15 @@ public static class Extensions
   public static (Ty, Tx) FlipTuple<Tx, Ty>((Tx, Ty) xy) => (xy.Item2, xy.Item1);
   public static (Tx, Ty, Tz) FlattenTuple<Tx, Ty, Tz>(((Tx, Ty), Tz) xyz) => (xyz.Item1.Item1, xyz.Item1.Item2, xyz.Item2);
 
-
   public static IEnumerable<(Tx, Ty)> Product<Tx, Ty>(this IEnumerable<Tx> xs, IEnumerable<Ty> ys)
   {
     var yx = xs.PairWith(ys).Select(FlipTuple).Select(ysx => ysx.Item1.PairWith(ysx.Item2)).SelectMany(a => a);
     return yx.Select(FlipTuple);
+  }
+
+  public static IEnumerable<(Tx, Ty)> Product<Tx, Ty>(this IEnumerable<Tx> xs, Ty y)
+  {
+    return xs.Select(x => (x, y));
   }
 
   public static IEnumerable<(Tx, Ty, Tz)> Product<Tx, Ty, Tz>(this IEnumerable<Tx> xs, IEnumerable<Ty> ys, IEnumerable<Tz> zs)
@@ -738,16 +742,33 @@ public static class Extensions
     return islands;
   }
 
+  public static float SignedTriangleVolume(IEnumerable<Vector3> vs)
+  {
+    if ((vs == null) || (vs.Count() != 3)) return 0;
+    var a = vs.ElementAt(0);
+    var b = vs.ElementAt(1);
+    var c = vs.ElementAt(2);
+    return Vector3.Dot(Vector3.Cross(a, b), c);
+  }
+
+  public static float SignedTriangleVolume(IEnumerable<Vector3> vertices, IEnumerable<int> vis)
+  {
+    return SignedTriangleVolume(vis.Select(vi => vertices.ElementAt(vi)));
+  }
+
   public static float SignedTriangleVolume(this Mesh m, IEnumerable<int> vis)
   {
-    if ((vis == null) || (vis.Count() != 3)) return 0;
-    var vs = vis.Select(vi => m.vertices[vi]).ToList();
-    return (Vector3.Dot(Vector3.Cross(vs[0], vs[1]), vs[2]));
+    return SignedTriangleVolume(m.vertices, vis);
+  }
+
+  public static float SignedVolume(IEnumerable<Vector3> vertices, IEnumerable<int> triangles)
+  {
+    return triangles.GroupsOf(3).Select(vis => SignedTriangleVolume(vertices, vis)).Sum();
   }
 
   public static float SignedVolume(this Mesh m)
   {
-    return m.triangles.GroupsOf(3).Select(vis => m.SignedTriangleVolume(vis)).Sum();
+    return SignedVolume(m.vertices, m.triangles);
   }
   public static float Volume(this Mesh m)
   {
