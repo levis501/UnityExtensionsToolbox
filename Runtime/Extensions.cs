@@ -748,7 +748,7 @@ public static class Extensions
     var a = vs.ElementAt(0);
     var b = vs.ElementAt(1);
     var c = vs.ElementAt(2);
-    return Vector3.Dot(Vector3.Cross(a, b), c);
+    return Vector3.Dot(Vector3.Cross(a, b), c) / 6;
   }
 
   public static float SignedTriangleVolume(IEnumerable<Vector3> vertices, IEnumerable<int> vis)
