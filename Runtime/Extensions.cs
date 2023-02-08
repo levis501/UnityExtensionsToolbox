@@ -801,5 +801,53 @@ public static class Extensions
     return mergeSets;
   }
 
+  public static List<(int a, int b)> QuadTriangles(this Mesh importMesh)
+  {
+    var vit = importMesh.VertexIndexToTriangleMapping();
+    var result = new List<(int a, int b)>();
+
+    while (vit.Any())
+    {
+      var singleton_vertex = vit.Keys.First(i => vit[i].Count == 1);
+      var a = vit[singleton_vertex].First();
+      var va = importMesh.TriangleVertexIndices(a);
+      var shared_verts = va.Where(i => i != singleton_vertex).ToArray();
+      var b = vit[shared_verts[0]].Intersect(vit[shared_verts[1]]).Where(t => t != a).First();
+      var vb = importMesh.TriangleVertexIndices(b);
+      result.Add((a, b));
+      vit.RemoveAll(va.Select(v => (v, a)));
+      vit.RemoveAll(vb.Select(v => (v, b)));
+    }
+    return result;
+  }
+
+  public static int[] QuadVertsFromTriangles(this Mesh m, int a, int b)
+  {
+    var va = new List<int> { m.triangles[3 * a], m.triangles[(3 * a) + 1], m.triangles[(3 * a) + 2] };
+    var vb = new List<int> { m.triangles[3 * b], m.triangles[(3 * b) + 1], m.triangles[(3 * b) + 2] };
+    var common = va.Intersect(vb).ToArray();
+    var uncommon = va.Union(vb).Except(common).ToArray();
+    if ((common.Length != 2) || (uncommon.Length != 2))
+    {
+      throw new NotSupportedException("Triangles mush share two vertices");
+    }
+    var vi = new int[] { uncommon[0], common[0], uncommon[1], common[1] };
+    var verts = vi.Select(i => m.vertices[i]).ToArray();
+    var norm = m.normals[common[0]];
+    // if normal is not consitant with the winding above, reverse the order of the vertices
+    if (Vector3.Dot(norm, Vector3.Cross(verts[3] - verts[0], verts[0] - verts[1])) < 0)
+    {
+      vi = vi.Reverse().ToArray();
+    }
+    return vi;
+  }
+
+  public static List<int> Quads(this Mesh mesh)
+  {
+    var quadTriangles = mesh.QuadTriangles();
+    var quads = quadTriangles.SelectMany(qt => mesh.QuadVertsFromTriangles(qt.a, qt.b));
+    return quads.ToList();
+  }
+
   #endregion
 }
