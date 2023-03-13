@@ -219,7 +219,7 @@ public static class Extensions
 
   public static Vector3 Sum(this IEnumerable<Vector3> vs)
   {
-    Func<Vector3, Vector3,  Vector3> add = (x, y) => (x + y);
+    Func<Vector3, Vector3, Vector3> add = (x, y) => (x + y);
     return vs.Aggregate(add);
   }
 
@@ -385,7 +385,7 @@ public static class Extensions
     return aggregate;
   }
 
-  public static IEnumerable<T> RotateFirst<T>(this IEnumerable<T> items, int n=1)
+  public static IEnumerable<T> RotateFirst<T>(this IEnumerable<T> items, int n = 1)
   {
     var tail = items.Take(n);
     var head = items.Skip(n);
@@ -437,7 +437,7 @@ public static class Extensions
   {
     return new MultiMap<TKey, TValue>(dict);
   }
-  
+
   #endregion
 
   #region FUNCTIONS
@@ -458,7 +458,7 @@ public static class Extensions
 
   public static Func<Tx, Ty, TResult> UntupleArgs<Tx, Ty, TResult>(this Func<(Tx, Ty), TResult> f)
   {
-      return (x, y) => f((x, y));
+    return (x, y) => f((x, y));
   }
 
   public static Func<Ta, Tc> After<Ta, Tb, Tc>(this Func<Tb, Tc> fbc, Func<Ta, Tb> fab) => (a => fbc(fab(a)));
@@ -648,7 +648,7 @@ public static class Extensions
 
   public static int mod(int a, int b)
   {
-    return ((a % b) + b) % b; 
+    return ((a % b) + b) % b;
   }
 
   public static int xmod(this int a, int b) => ((a % b) + b) % b;
@@ -799,6 +799,21 @@ public static class Extensions
     var mergeSets = eqVerts.Values.ToList();
 
     return mergeSets;
+  }
+
+  #endregion
+  #region GIZMOS
+
+  public static void GizmoArrow(Vector3 pFrom, Vector3 pTo)
+  {
+    Gizmos.DrawLine(pFrom, pTo);
+    var d = pTo - pFrom;
+    var r = d.magnitude * 0.1f;
+    var ah = pFrom + 0.8f * d;
+    for (float a = 0; a <= 1; a += 0.1f)
+    {
+      Gizmos.DrawSphere(ah + 0.2f * a * d, r * 0.5f * (1 - a));
+    }
   }
 
   #endregion
