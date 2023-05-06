@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using log4net.Util;
 using Transform = UnityEngine.Transform;
 using UnityEngine.UIElements;
 
@@ -868,6 +867,21 @@ public static class Extensions
     var quadTriangles = mesh.QuadTriangles();
     var quads = quadTriangles.SelectMany(qt => mesh.QuadVertsFromTriangles(qt.a, qt.b));
     return quads.ToList();
+  }
+
+  #endregion
+  #region GIZMOS
+
+  public static void GizmoArrow(Vector3 pFrom, Vector3 pTo)
+  {
+    Gizmos.DrawLine(pFrom, pTo);
+    var d = pTo - pFrom;
+    var r = d.magnitude * 0.1f;
+    var ah = pFrom + 0.8f * d;
+    for (float a = 0; a <= 1; a += 0.1f)
+    {
+      Gizmos.DrawSphere(ah + 0.2f * a * d, r * 0.5f * (1 - a));
+    }
   }
 
   #endregion
