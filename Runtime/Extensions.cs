@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using log4net.Util;
 using Transform = UnityEngine.Transform;
+using UnityEngine.UIElements;
 
 public static class Extensions
 {
@@ -219,7 +220,7 @@ public static class Extensions
 
   public static Vector3 Sum(this IEnumerable<Vector3> vs)
   {
-    Func<Vector3, Vector3,  Vector3> add = (x, y) => (x + y);
+    Func<Vector3, Vector3, Vector3> add = (x, y) => (x + y);
     return vs.Aggregate(add);
   }
 
@@ -230,7 +231,22 @@ public static class Extensions
 
 
   #endregion
+  #region QUATERNIONS
+  public static Vector3 Up(this Quaternion q)
+  {
+    return q * Vector3.up;
+  }
 
+  public static Vector3 Right(this Quaternion q)
+  {
+    return q * Vector3.right;
+  }
+
+  public static Vector3 Forward(this Quaternion q)
+  {
+    return q * Vector3.forward;
+  }
+  #endregion
   #region INTERSECTIONS
   public static Ray Reversed(this Ray ray)
   {
@@ -385,7 +401,7 @@ public static class Extensions
     return aggregate;
   }
 
-  public static IEnumerable<T> RotateFirst<T>(this IEnumerable<T> items, int n=1)
+  public static IEnumerable<T> RotateFirst<T>(this IEnumerable<T> items, int n = 1)
   {
     var tail = items.Take(n);
     var head = items.Skip(n);
@@ -437,7 +453,7 @@ public static class Extensions
   {
     return new MultiMap<TKey, TValue>(dict);
   }
-  
+
   #endregion
 
   #region FUNCTIONS
@@ -458,7 +474,7 @@ public static class Extensions
 
   public static Func<Tx, Ty, TResult> UntupleArgs<Tx, Ty, TResult>(this Func<(Tx, Ty), TResult> f)
   {
-      return (x, y) => f((x, y));
+    return (x, y) => f((x, y));
   }
 
   public static Func<Ta, Tc> After<Ta, Tb, Tc>(this Func<Tb, Tc> fbc, Func<Ta, Tb> fab) => (a => fbc(fab(a)));
@@ -533,6 +549,11 @@ public static class Extensions
   public static IEnumerable<Transform> GetChildren(this Transform root)
   {
     return Enumerable.Range(0, root.childCount).Select(i => root.GetChild(i));
+  }
+
+  public static IEnumerable<T> GetChildrenWith<T>(this Transform root)
+  {
+    return root.GetChildren().Select(c => c.GetComponent<T>()).Where(s => s != null);
   }
 
   public static IEnumerable<GameObject> GetChildGameObjects(this Transform root)
@@ -648,7 +669,7 @@ public static class Extensions
 
   public static int mod(int a, int b)
   {
-    return ((a % b) + b) % b; 
+    return ((a % b) + b) % b;
   }
 
   public static int xmod(this int a, int b) => ((a % b) + b) % b;
