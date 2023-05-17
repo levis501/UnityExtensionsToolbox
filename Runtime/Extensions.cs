@@ -716,6 +716,11 @@ public static class Extensions
   public static int xmod(this int a, int b) => ((a % b) + b) % b;
   public static float xmod(this float a, float b) => ((a % b) + b) % b;
   public static double xmod(this double a, double b) => ((a % b) + b) % b;
+
+  public static float Fract(float v)
+  {
+    return v - Mathf.Floor(v);
+  }
   #endregion
 
   #region MESH
