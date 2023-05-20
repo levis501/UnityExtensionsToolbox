@@ -7,7 +7,8 @@ using System.Linq;
 // Initially writing this as a momentum optimizer.  
 // Thanks to https://www.geeksforgeeks.org/intuition-of-adam-optimizer/
 
-public class MomentumOptimizer {
+public class MomentumOptimizer
+{
 
   System.Func<List<float>, float> costFunction;
   IEnumerable<float> momentum;
@@ -31,9 +32,9 @@ public class MomentumOptimizer {
   {
 
     float a = learning_rate;
-    float b = momemtum_retention; 
+    float b = momemtum_retention;
 
-    for (int iteration=0; iteration < maximum_iteration_count; iteration++)
+    for (int iteration = 0; iteration < maximum_iteration_count; iteration++)
     {
       var g = Enumerable.Range(0, n).Select(i => LocalPartialGradient(values, i, currentCost));
       momentum = momentum.Zip(g, (m, g) => (b * m + (1 - b) * g));
@@ -53,5 +54,12 @@ public class MomentumOptimizer {
     var cc = costFunction(vv);
 
     return (cc - c) / epsilon;
+  }
+
+  public static float RangeCost(float x, float lo, float hi)
+  {
+    if (x < lo) return (lo - x);
+    if (x > hi) return (x - hi);
+    return 0;
   }
 }
