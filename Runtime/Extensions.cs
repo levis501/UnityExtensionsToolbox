@@ -230,6 +230,24 @@ public static class Extensions
 
 
   #endregion
+
+  #region RANDOM
+
+  public static float Range(this System.Random rng, float min, float max)
+  {
+    return (float)rng.NextDouble() * (max - min) + min;
+  }
+
+  public static Vector3 InBounds(this System.Random rng, Bounds b)
+  {
+    return new Vector3(
+      rng.Range(b.min.x, b.max.x),
+      rng.Range(b.min.y, b.max.y),
+      rng.Range(b.min.z, b.max.z)
+    );
+  }
+  #endregion
+
   #region QUATERNIONS
   public static Vector3 Up(this Quaternion q)
   {
