@@ -246,6 +246,11 @@ public static class Extensions
       rng.Range(b.min.z, b.max.z)
     );
   }
+
+  public static T Choice<T>(this System.Random rng, IEnumerable<T> items)
+  {
+    return items.ElementAt(rng.Next(items.Count()));
+  }
   #endregion
 
   #region QUATERNIONS
