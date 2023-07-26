@@ -64,9 +64,20 @@ public static class Extensions
     return new Vector2(f(v.x), f(v.y));
   }
 
+  public static Vector2Int MapToInt(this Vector2 v, Func<float, int> f)
+  {
+    return new Vector2Int(f(v.x), f(v.y));
+  }
+
+
   public static Vector3 Map(this Vector3 v, Func<float, float> f)
   {
     return new Vector3(f(v.x), f(v.y), f(v.z));
+  }
+
+  public static Vector3Int MapToInt(this Vector3 v, Func<float, int> f)
+  {
+    return new Vector3Int(f(v.x), f(v.y), f(v.z));
   }
 
   public static Vector3 WithX(this Vector3 v, float x)
