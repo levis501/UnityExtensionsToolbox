@@ -69,6 +69,11 @@ public static class Extensions
     return new Vector2Int(f(v.x), f(v.y));
   }
 
+  public static Vector2 ToVector2(this Vector2Int v)
+  {
+    return new Vector2(v.x, v.y);
+  }
+
 
   public static Vector3 Map(this Vector3 v, Func<float, float> f)
   {
@@ -78,6 +83,11 @@ public static class Extensions
   public static Vector3Int MapToInt(this Vector3 v, Func<float, int> f)
   {
     return new Vector3Int(f(v.x), f(v.y), f(v.z));
+  }
+
+  public static Vector3 ToVector3(this Vector3Int v)
+  {
+    return new Vector3(v.x, v.y, v.z);
   }
 
   public static Vector3 WithX(this Vector3 v, float x)
