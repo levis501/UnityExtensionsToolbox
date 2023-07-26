@@ -573,6 +573,9 @@ public static class Extensions
     return Color.HSVToRGB(h, s, v);
   }
 
+  // map a float value from 0..1 to a color gradient
+  public static Color HueGradient(float f) => Color.HSVToRGB(f, 1, 1);
+
   #endregion
 
   #region LAYOUT CALCULATIONS
